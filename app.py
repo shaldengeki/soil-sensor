@@ -1,8 +1,10 @@
 import dataclasses
-import time
 import board
 from adafruit_seesaw.seesaw import Seesaw
+from flask import Flask
 
+
+app = Flask(__name__)
 
 @dataclasses.dataclass
 class SensorReading:
@@ -17,14 +19,13 @@ def get_reading(sensor: Seesaw) -> SensorReading:
   )
 
 
-def main() -> None:
-  i2c_bus = board.I2C()
-  seesaw = Seesaw(i2c_bus, addr=0x36)
-  while True:
-    reading = get_reading(seesaw)
-    print(f"temperature: {reading.temperature}  moisture: {reading.moisture}")
-    time.sleep(1)
+i2c_bus = board.I2C()
+seesaw = Seesaw(i2c_bus, addr=0x36)
 
-
-if __name__ == '__main__':
-  main()
+@app.route("/reading")
+def reading():
+  reading = get_reading(seesaw)
+  return {
+    'temperature': reading.temperature,
+    'moisture': reading.moisture,
+  }
